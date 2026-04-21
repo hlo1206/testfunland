@@ -3,7 +3,6 @@ import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import "@/lib/api";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { HomePage } from "@/pages/Home";

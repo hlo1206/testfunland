@@ -1,10 +1,8 @@
-import { useGetServerStatus } from "@workspace/api-client-react";
+import { useGetServerStatus } from "@/lib/supabase";
 import { BlockIcon } from "./Icons";
 
 export function ServerStatusCard() {
-  const { data, isLoading } = useGetServerStatus({
-    query: { refetchInterval: 30_000 },
-  });
+  const { data, isLoading } = useGetServerStatus({ refetchInterval: 30_000 });
 
   const status = data?.status ?? "offline";
   const dotClass =

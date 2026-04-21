@@ -31,16 +31,27 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 Public Minecraft store + admin panel for the FunLand MC server.
 
 ### Artifacts
-- `artifacts/funland-mc` (web, base `/`) — public site (Home, Store, Checkout, Admin)
-- `artifacts/api-server` (api, base `/api`) — Express + Drizzle backend
+- `artifacts/funland-mc` (web) — public site (Home, Store, Checkout, Admin). **Talks to Supabase directly.** No backend needed for production.
+- `artifacts/api-server` — legacy Express backend, no longer used by the frontend. Can be ignored for the Vercel deploy.
+
+### Backend: Supabase
+Project: `gncywtnrplxhjjtdoclo.supabase.co`. Schema lives in Supabase Postgres (`products`, `orders`, `server_status`). Storage bucket `payment-proofs` (public read). RLS policies allow:
+- anyone: read products/server_status, insert orders, upload payment proofs
+- authenticated (admin): read/update orders, update server_status
+
+Frontend client at `artifacts/funland-mc/src/lib/supabase.ts` exposes typed React Query hooks (`useListProducts`, `useGetServerStatus`, `useCreateOrder`, etc.) plus `uploadPaymentProof`.
 
 ### Admin access
-Set the `ADMIN_EMAILS` env var on the api-server to a comma-separated list of admin emails. After signing in via Replit Auth with an email in this list, the user gets `isAdmin = true` and access to `/admin`.
+Sign in at `/admin` with username `prideisnub` and password `nubispride`. Under the hood this calls `supabase.auth.signInWithPassword` using the email `prideisnub@funland.local`.
+
+### Vercel deployment
+1. Set Vercel project root directory to `artifacts/funland-mc`.
+2. `vercel.json` is already set up — it builds from the monorepo root and outputs `dist/public`.
+3. Add env vars in Vercel: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (values currently in `artifacts/funland-mc/.env`).
+4. SPA routing handled via the `rewrites` rule in `vercel.json`.
 
 ### Important details
 - UPI ID for website payments: `9155174642@pthdfc`
 - Discord: `https://discord.gg/gPSDTxqYWn`
 - Server: `play.funlandmc.fun:19132`, versions 1.16+ to 1.21.11
-- Products are seeded directly in the database (`products` table). To re-seed, run the seed SQL in `lib/db/src/schema/funland.ts` notes.
-- Payment proofs upload via presigned URL flow (`/api/storage/uploads/request-url`) and are stored in object storage.
 - Order statuses: `pending → verified → delivered` (or `rejected`).

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useListProducts } from "@workspace/api-client-react";
+import { useListProducts } from "@/lib/supabase";
 import { ProductCard } from "@/components/ProductCard";
 import { CoinIcon, ShieldIcon, HeartIcon } from "@/components/Icons";
 

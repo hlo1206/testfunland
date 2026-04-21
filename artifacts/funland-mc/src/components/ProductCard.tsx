@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import type { Product } from "@workspace/api-client-react";
+import type { Product } from "@/lib/supabase";
 import {
   CoinIcon,
   ShieldIcon,

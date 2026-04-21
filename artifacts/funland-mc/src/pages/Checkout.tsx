@@ -3,9 +3,9 @@ import { useLocation } from "wouter";
 import {
   useListProducts,
   useCreateOrder,
+  uploadPaymentProof,
   type Product,
-} from "@workspace/api-client-react";
-import { useUpload } from "@workspace/object-storage-web";
+} from "@/lib/supabase";
 import { ChestIcon, UploadIcon, CoinIcon } from "@/components/Icons";
 
 const UPI_ID = "9155174642@pthdfc";
@@ -26,8 +26,9 @@ export function CheckoutPage() {
   const [referral, setReferral] = useState("");
   const [transactionRef, setTransactionRef] = useState("");
   const [notes, setNotes] = useState("");
-  const [proofPath, setProofPath] = useState<string | null>(null);
+  const [proofUrl, setProofUrl] = useState<string | null>(null);
   const [proofName, setProofName] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [submitted, setSubmitted] = useState<{ id: string } | null>(null);
 
   useEffect(() => {
@@ -46,23 +47,22 @@ export function CheckoutPage() {
     [productId, products],
   );
 
-  const upload = useUpload({
-    onSuccess: (r) => {
-      setProofPath(r.objectPath);
-    },
-    onError: (e) => {
-      alert(`Upload failed: ${e.message}`);
-    },
-  });
-
   const createOrder = useCreateOrder();
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
     setProofName(f.name);
-    setProofPath(null);
-    await upload.uploadFile(f);
+    setProofUrl(null);
+    setUploading(true);
+    try {
+      const r = await uploadPaymentProof(f);
+      setProofUrl(r.publicUrl);
+    } catch (err) {
+      alert(`Upload failed: ${(err as Error).message}`);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -72,24 +72,26 @@ export function CheckoutPage() {
       alert("Please enter your Minecraft username.");
       return;
     }
-    if (!proofPath) {
+    if (!proofUrl) {
       alert("Please upload a screenshot of the UPI payment.");
       return;
     }
 
-    const res = await createOrder.mutateAsync({
-      data: {
+    try {
+      const res = await createOrder.mutateAsync({
         productId: product.id,
         minecraftUsername: username.trim(),
         contact: contact.trim() || null,
         referral: referral.trim() || null,
         paymentMethod: "website",
-        paymentProofPath: proofPath,
+        paymentProofPath: proofUrl,
         transactionRef: transactionRef.trim() || null,
         notes: notes.trim() || null,
-      },
-    });
-    setSubmitted({ id: res.id });
+      });
+      setSubmitted({ id: res.id });
+    } catch (err) {
+      alert(`Order failed: ${(err as Error).message}`);
+    }
   };
 
   if (submitted) {
@@ -111,7 +113,7 @@ export function CheckoutPage() {
                 className="mc-btn mc-btn-gold"
                 onClick={() => {
                   setSubmitted(null);
-                  setProofPath(null);
+                  setProofUrl(null);
                   setProofName(null);
                   setTransactionRef("");
                   navigate("/store");
@@ -217,9 +219,9 @@ export function CheckoutPage() {
                   />
                   <UploadIcon width={20} height={20} />
                   <span>
-                    {upload.isUploading
+                    {uploading
                       ? "Uploading…"
-                      : proofPath
+                      : proofUrl
                         ? `Uploaded: ${proofName}`
                         : proofName
                           ? proofName
@@ -265,10 +267,7 @@ export function CheckoutPage() {
               type="submit"
               className="mc-btn mc-btn-gold mc-btn-lg mc-btn-block"
               disabled={
-                createOrder.isPending ||
-                upload.isUploading ||
-                !product ||
-                !proofPath
+                createOrder.isPending || uploading || !product || !proofUrl
               }
               data-testid="button-submit"
             >

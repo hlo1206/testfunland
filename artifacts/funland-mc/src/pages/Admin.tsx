@@ -1,21 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  supabase,
+  ADMIN_EMAIL,
   useListAdminOrders,
   useUpdateAdminOrder,
   useGetServerStatus,
   useUpdateServerStatus,
-  useGetAdminStats,
+  useAdminStats,
   type Order,
-} from "@workspace/api-client-react";
+} from "@/lib/supabase";
 import { ShieldIcon, ChestIcon, HeartIcon, CoinIcon } from "@/components/Icons";
 
 const ADMIN_USER = "prideisnub";
-const ADMIN_PASS = "nubispride";
-const TOKEN_KEY = "funland-admin-token";
-
-function makeToken(user: string, pass: string): string {
-  return btoa(`${user}:${pass}`);
-}
 
 function StatusBadge({ status }: { status: Order["status"] }) {
   return (
@@ -141,34 +137,32 @@ function StatusEditor() {
     version: "",
     message: "",
   });
+  const [hydrated, setHydrated] = useState(false);
 
-  const initialized =
-    data &&
-    (form.ip === "" || (form.ip === data.ip && form.version === data.version));
-
-  if (data && form.ip === "") {
-    setForm({
-      status: data.status,
-      playersOnline: data.playersOnline,
-      maxPlayers: data.maxPlayers,
-      ip: data.ip,
-      port: data.port,
-      version: data.version,
-      message: data.message ?? "",
-    });
-  }
+  useEffect(() => {
+    if (data && !hydrated) {
+      setForm({
+        status: data.status,
+        playersOnline: data.playersOnline,
+        maxPlayers: data.maxPlayers,
+        ip: data.ip,
+        port: data.port,
+        version: data.version,
+        message: data.message ?? "",
+      });
+      setHydrated(true);
+    }
+  }, [data, hydrated]);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     update.mutate({
-      data: {
-        ...form,
-        message: form.message.trim() || null,
-      },
+      ...form,
+      message: form.message.trim() || null,
     });
   };
 
-  if (!initialized) return null;
+  if (!hydrated) return null;
 
   return (
     <form className="mc-card-form" onSubmit={submit}>
@@ -233,15 +227,27 @@ function LoginGate({ onLogin }: { onLogin: () => void }) {
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (user.trim() === ADMIN_USER && pass === ADMIN_PASS) {
-      localStorage.setItem(TOKEN_KEY, makeToken(ADMIN_USER, ADMIN_PASS));
-      setError(null);
-      onLogin();
-    } else {
-      setError("Invalid username or password.");
+    setBusy(true);
+    setError(null);
+    try {
+      const email = user.trim() === ADMIN_USER ? ADMIN_EMAIL : user.trim();
+      const { error: err } = await supabase.auth.signInWithPassword({
+        email,
+        password: pass,
+      });
+      if (err) {
+        setError("Invalid username or password.");
+      } else {
+        onLogin();
+      }
+    } catch {
+      setError("Sign-in failed. Try again.");
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -282,9 +288,10 @@ function LoginGate({ onLogin }: { onLogin: () => void }) {
             <button
               type="submit"
               className="mc-btn mc-btn-gold"
+              disabled={busy}
               data-testid="button-admin-login"
             >
-              Sign in
+              {busy ? "Signing in…" : "Sign in"}
             </button>
           </form>
         </div>
@@ -294,24 +301,42 @@ function LoginGate({ onLogin }: { onLogin: () => void }) {
 }
 
 export function AdminPage() {
-  const [authed, setAuthed] = useState<boolean>(
-    typeof window !== "undefined" &&
-      localStorage.getItem(TOKEN_KEY) === makeToken(ADMIN_USER, ADMIN_PASS),
-  );
-  const { data: orders } = useListAdminOrders({
-    query: { enabled: authed },
-  });
-  const { data: stats } = useGetAdminStats({
-    query: { enabled: authed },
-  });
+  const [authed, setAuthed] = useState<boolean | null>(null);
   const [filter, setFilter] = useState<Order["status"] | "all">("pending");
+
+  useEffect(() => {
+    let mounted = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (mounted) setAuthed(!!data.session);
+    });
+    const sub = supabase.auth.onAuthStateChange((_e, session) => {
+      setAuthed(!!session);
+    });
+    return () => {
+      mounted = false;
+      sub.data.subscription.unsubscribe();
+    };
+  }, []);
+
+  const { data: orders } = useListAdminOrders({ enabled: !!authed });
+  const stats = useAdminStats(orders);
+
+  if (authed === null) {
+    return (
+      <main className="mc-page">
+        <section className="mc-section">
+          <div className="mc-empty">Loading…</div>
+        </section>
+      </main>
+    );
+  }
 
   if (!authed) {
     return <LoginGate onLogin={() => setAuthed(true)} />;
   }
 
-  const logout = () => {
-    localStorage.removeItem(TOKEN_KEY);
+  const logout = async () => {
+    await supabase.auth.signOut();
     setAuthed(false);
   };
 
@@ -355,7 +380,7 @@ export function AdminPage() {
             </div>
             <div>
               <div className="mc-stat-num" data-testid="stat-pending">
-                {stats?.pending ?? 0}
+                {stats.pending}
               </div>
               <div className="mc-stat-label">Pending</div>
             </div>
@@ -365,7 +390,7 @@ export function AdminPage() {
               <HeartIcon width={22} height={22} />
             </div>
             <div>
-              <div className="mc-stat-num">{stats?.verified ?? 0}</div>
+              <div className="mc-stat-num">{stats.verified}</div>
               <div className="mc-stat-label">Verified</div>
             </div>
           </div>
@@ -374,7 +399,7 @@ export function AdminPage() {
               <ShieldIcon width={22} height={22} />
             </div>
             <div>
-              <div className="mc-stat-num">{stats?.delivered ?? 0}</div>
+              <div className="mc-stat-num">{stats.delivered}</div>
               <div className="mc-stat-label">Delivered</div>
             </div>
           </div>
@@ -383,7 +408,7 @@ export function AdminPage() {
               <CoinIcon width={22} height={22} />
             </div>
             <div>
-              <div className="mc-stat-num">₹{stats?.revenueInr ?? 0}</div>
+              <div className="mc-stat-num">₹{stats.revenueInr}</div>
               <div className="mc-stat-label">Revenue</div>
             </div>
           </div>

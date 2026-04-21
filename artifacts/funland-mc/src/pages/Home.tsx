@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { useListProducts } from "@workspace/api-client-react";
+import { useListProducts } from "@/lib/supabase";
 import { ServerStatusCard } from "@/components/ServerStatusCard";
 import { ProductCard } from "@/components/ProductCard";
 import {
