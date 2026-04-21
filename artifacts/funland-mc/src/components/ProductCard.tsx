@@ -1,45 +1,129 @@
-import { Link } from "wouter";
+import { useState } from "react";
+import { useLocation } from "wouter";
 import type { Product } from "@workspace/api-client-react";
-import { CoinIcon, ShieldIcon, ChestIcon, HeartIcon } from "./Icons";
+import {
+  CoinIcon,
+  ShieldIcon,
+  ChestIcon,
+  HeartIcon,
+  DiscordIcon,
+  UploadIcon,
+} from "./Icons";
+
+const DISCORD_URL = "https://discord.gg/gPSDTxqYWn";
 
 function CategoryIcon({ category }: { category: string }) {
   const size = 36;
-  if (category === "coins")
-    return <CoinIcon width={size} height={size} />;
-  if (category === "rank")
-    return <ShieldIcon width={size} height={size} />;
+  if (category === "coins") return <CoinIcon width={size} height={size} />;
+  if (category === "rank") return <ShieldIcon width={size} height={size} />;
   return <HeartIcon width={size} height={size} />;
 }
 
 export function ProductCard({ product }: { product: Product }) {
   const accent = product.accent ?? "#fbbf24";
+  const [open, setOpen] = useState(false);
+  const [, navigate] = useLocation();
+
+  const close = () => setOpen(false);
+
   return (
-    <article
-      className="mc-card"
-      style={{ ["--accent" as string]: accent }}
-      data-testid={`card-product-${product.id}`}
-    >
-      <div className="mc-card-icon">
-        <CategoryIcon category={product.category} />
-      </div>
-      <div className="mc-card-name" data-testid={`text-name-${product.id}`}>
-        {product.name}
-      </div>
-      {product.tagline && (
-        <div className="mc-card-tag">{product.tagline}</div>
-      )}
-      <div className="mc-card-price" data-testid={`text-price-${product.id}`}>
-        <span className="mc-price-currency">₹</span>
-        {product.priceInr}
-      </div>
-      <Link
-        href={`/checkout?product=${product.id}`}
-        className="mc-btn mc-btn-buy"
-        data-testid={`button-buy-${product.id}`}
+    <>
+      <article
+        className="mc-card"
+        style={{ ["--accent" as string]: accent }}
+        data-testid={`card-product-${product.id}`}
       >
-        <ChestIcon width={16} height={16} />
-        <span>Buy now</span>
-      </Link>
-    </article>
+        <div className="mc-card-icon">
+          <CategoryIcon category={product.category} />
+        </div>
+        <div className="mc-card-name" data-testid={`text-name-${product.id}`}>
+          {product.name}
+        </div>
+        {product.tagline && <div className="mc-card-tag">{product.tagline}</div>}
+        <div className="mc-card-price" data-testid={`text-price-${product.id}`}>
+          <span className="mc-price-currency">₹</span>
+          {product.priceInr}
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="mc-btn mc-btn-buy"
+          data-testid={`button-buy-${product.id}`}
+        >
+          <ChestIcon width={16} height={16} />
+          <span>Buy now</span>
+        </button>
+      </article>
+
+      {open && (
+        <div
+          className="mc-modal-backdrop"
+          onClick={close}
+          data-testid={`modal-buy-${product.id}`}
+        >
+          <div
+            className="mc-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-label={`Buy ${product.name}`}
+          >
+            <button
+              className="mc-modal-close"
+              onClick={close}
+              aria-label="Close"
+              data-testid={`modal-close-${product.id}`}
+            >
+              ×
+            </button>
+            <div className="mc-modal-head">
+              <div className="mc-modal-icon">
+                <CategoryIcon category={product.category} />
+              </div>
+              <div>
+                <div className="mc-modal-title">{product.name}</div>
+                <div className="mc-modal-price">₹{product.priceInr}</div>
+              </div>
+            </div>
+            <div className="mc-modal-sub">How would you like to pay?</div>
+            <div className="mc-modal-options">
+              <a
+                href={DISCORD_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="mc-method"
+                data-testid={`modal-discord-${product.id}`}
+                onClick={close}
+              >
+                <DiscordIcon width={28} height={28} />
+                <div>
+                  <div className="mc-method-name">Discord ticket</div>
+                  <div className="mc-method-sub">
+                    Instant — open a ticket and our staff delivers immediately.
+                  </div>
+                </div>
+              </a>
+              <button
+                type="button"
+                className="mc-method"
+                data-testid={`modal-website-${product.id}`}
+                onClick={() => {
+                  close();
+                  navigate(`/checkout?product=${product.id}`);
+                }}
+              >
+                <UploadIcon width={28} height={28} />
+                <div>
+                  <div className="mc-method-name">Pay on website (UPI)</div>
+                  <div className="mc-method-sub">
+                    Upload payment screenshot — verified within 30 min to 1
+                    working day.
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
