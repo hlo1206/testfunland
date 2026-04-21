@@ -229,7 +229,7 @@ export type CreateOrderInput = {
 
 export function useCreateOrder() {
   return useMutation({
-    mutationFn: async (input: CreateOrderInput): Promise<Order> => {
+    mutationFn: async (input: CreateOrderInput): Promise<{ id: string }> => {
       const { data: prod, error: prodErr } = await supabase
         .from("products")
         .select("*")
@@ -238,26 +238,28 @@ export function useCreateOrder() {
       if (prodErr) throw prodErr;
       const product = mapProduct(prod as ProductRow);
 
-      const { data, error } = await supabase
-        .from("orders")
-        .insert({
-          product_id: product.id,
-          product_name: product.name,
-          product_category: product.category,
-          price_inr: product.priceInr,
-          minecraft_username: input.minecraftUsername,
-          contact: input.contact,
-          referral: input.referral,
-          payment_method: input.paymentMethod,
-          payment_proof_path: input.paymentProofPath,
-          transaction_ref: input.transactionRef,
-          notes: input.notes,
-          status: "pending",
-        })
-        .select("*")
-        .single();
+      const id =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+      const { error } = await supabase.from("orders").insert({
+        id,
+        product_id: product.id,
+        product_name: product.name,
+        product_category: product.category,
+        price_inr: product.priceInr,
+        minecraft_username: input.minecraftUsername,
+        contact: input.contact,
+        referral: input.referral,
+        payment_method: input.paymentMethod,
+        payment_proof_path: input.paymentProofPath,
+        transaction_ref: input.transactionRef,
+        notes: input.notes,
+        status: "pending",
+      });
       if (error) throw error;
-      return mapOrder(data as OrderRow);
+      return { id };
     },
   });
 }
