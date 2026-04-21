@@ -1,5 +1,5 @@
 import { useGetServerStatus } from "@workspace/api-client-react";
-import { BlockIcon, HeartIcon } from "./Icons";
+import { BlockIcon } from "./Icons";
 
 export function ServerStatusCard() {
   const { data, isLoading } = useGetServerStatus({
@@ -32,17 +32,6 @@ export function ServerStatusCard() {
         <div>
           <div className="mc-status-key">Port</div>
           <div className="mc-status-val">{data?.port ?? "—"}</div>
-        </div>
-        <div>
-          <div className="mc-status-key">Players</div>
-          <div className="mc-status-val">
-            <HeartIcon
-              width={14}
-              height={14}
-              style={{ verticalAlign: "-2px", marginRight: 6 }}
-            />
-            {data?.playersOnline ?? 0} / {data?.maxPlayers ?? 0}
-          </div>
         </div>
         <div>
           <div className="mc-status-key">Version</div>

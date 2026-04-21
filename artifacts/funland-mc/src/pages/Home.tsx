@@ -47,7 +47,7 @@ export function HomePage() {
         <div className="mc-hero-inner">
           <div className="mc-hero-text">
             <span className="mc-eyebrow">
-              <StarIcon width={14} height={14} /> Season 4 is live
+              <StarIcon width={14} height={14} /> Season 1 is live!
             </span>
             <h1 className="mc-h1">
               Step into <span className="mc-h1-gold">FunLand</span>
