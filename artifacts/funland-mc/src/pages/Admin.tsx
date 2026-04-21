@@ -7,8 +7,15 @@ import {
   useGetAdminStats,
   type Order,
 } from "@workspace/api-client-react";
-import { useAuth } from "@workspace/replit-auth-web";
 import { ShieldIcon, ChestIcon, HeartIcon, CoinIcon } from "@/components/Icons";
+
+const ADMIN_USER = "prideisnub";
+const ADMIN_PASS = "nubispride";
+const TOKEN_KEY = "funland-admin-token";
+
+function makeToken(user: string, pass: string): string {
+  return btoa(`${user}:${pass}`);
+}
 
 function StatusBadge({ status }: { status: Order["status"] }) {
   return (
@@ -181,30 +188,6 @@ function StatusEditor() {
       </select>
       <div className="mc-row-2">
         <div>
-          <label className="mc-label">Players online</label>
-          <input
-            type="number"
-            className="mc-input"
-            value={form.playersOnline}
-            onChange={(e) =>
-              setForm({ ...form, playersOnline: Number(e.target.value) })
-            }
-          />
-        </div>
-        <div>
-          <label className="mc-label">Max players</label>
-          <input
-            type="number"
-            className="mc-input"
-            value={form.maxPlayers}
-            onChange={(e) =>
-              setForm({ ...form, maxPlayers: Number(e.target.value) })
-            }
-          />
-        </div>
-      </div>
-      <div className="mc-row-2">
-        <div>
           <label className="mc-label">IP</label>
           <input
             className="mc-input"
@@ -246,56 +229,91 @@ function StatusEditor() {
   );
 }
 
+function LoginGate({ onLogin }: { onLogin: () => void }) {
+  const [user, setUser] = useState("");
+  const [pass, setPass] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (user.trim() === ADMIN_USER && pass === ADMIN_PASS) {
+      localStorage.setItem(TOKEN_KEY, makeToken(ADMIN_USER, ADMIN_PASS));
+      setError(null);
+      onLogin();
+    } else {
+      setError("Invalid username or password.");
+    }
+  };
+
+  return (
+    <main className="mc-page">
+      <section className="mc-section">
+        <div className="mc-success" style={{ maxWidth: 420, margin: "0 auto" }}>
+          <ShieldIcon width={48} height={48} />
+          <h1 className="mc-h2">Admin access</h1>
+          <p>Enter your admin credentials to continue.</p>
+          <form
+            onSubmit={submit}
+            className="mc-card-form"
+            style={{ width: "100%" }}
+          >
+            <label className="mc-label">Username</label>
+            <input
+              className="mc-input"
+              value={user}
+              onChange={(e) => setUser(e.target.value)}
+              autoComplete="username"
+              data-testid="input-admin-user"
+            />
+            <label className="mc-label">Password</label>
+            <input
+              type="password"
+              className="mc-input"
+              value={pass}
+              onChange={(e) => setPass(e.target.value)}
+              autoComplete="current-password"
+              data-testid="input-admin-pass"
+            />
+            {error && (
+              <div className="mc-status-msg" style={{ color: "#ff7a7a" }}>
+                {error}
+              </div>
+            )}
+            <button
+              type="submit"
+              className="mc-btn mc-btn-gold"
+              data-testid="button-admin-login"
+            >
+              Sign in
+            </button>
+          </form>
+        </div>
+      </section>
+    </main>
+  );
+}
+
 export function AdminPage() {
-  const { user, isLoading, isAuthenticated, login } = useAuth();
+  const [authed, setAuthed] = useState<boolean>(
+    typeof window !== "undefined" &&
+      localStorage.getItem(TOKEN_KEY) === makeToken(ADMIN_USER, ADMIN_PASS),
+  );
   const { data: orders } = useListAdminOrders({
-    query: { enabled: isAuthenticated && !!user?.isAdmin },
+    query: { enabled: authed },
   });
   const { data: stats } = useGetAdminStats({
-    query: { enabled: isAuthenticated && !!user?.isAdmin },
+    query: { enabled: authed },
   });
   const [filter, setFilter] = useState<Order["status"] | "all">("pending");
 
-  if (isLoading) {
-    return (
-      <main className="mc-page">
-        <section className="mc-section">
-          <div className="mc-empty">Loading…</div>
-        </section>
-      </main>
-    );
+  if (!authed) {
+    return <LoginGate onLogin={() => setAuthed(true)} />;
   }
 
-  if (!isAuthenticated) {
-    return (
-      <main className="mc-page">
-        <section className="mc-section">
-          <div className="mc-success">
-            <ShieldIcon width={48} height={48} />
-            <h1 className="mc-h2">Sign in required</h1>
-            <p>You need to sign in with an admin account to access this area.</p>
-            <button className="mc-btn mc-btn-gold" onClick={login}>
-              Sign in
-            </button>
-          </div>
-        </section>
-      </main>
-    );
-  }
-
-  if (!user?.isAdmin) {
-    return (
-      <main className="mc-page">
-        <section className="mc-section">
-          <div className="mc-success">
-            <ShieldIcon width={48} height={48} />
-            <h1 className="mc-h2">Access denied</h1>
-            <p>This account doesn&apos;t have admin permissions.</p>
-          </div>
-        </section>
-      </main>
-    );
-  }
+  const logout = () => {
+    localStorage.removeItem(TOKEN_KEY);
+    setAuthed(false);
+  };
 
   const filtered =
     filter === "all"
@@ -305,11 +323,29 @@ export function AdminPage() {
   return (
     <main className="mc-page">
       <section className="mc-section">
-        <header className="mc-section-head">
-          <h1 className="mc-h1 mc-h1-sm">Admin</h1>
-          <p className="mc-section-sub">
-            Verify payments, deliver orders, and keep the server status fresh.
-          </p>
+        <header
+          className="mc-section-head"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            gap: 16,
+            flexWrap: "wrap",
+          }}
+        >
+          <div>
+            <h1 className="mc-h1 mc-h1-sm">Admin</h1>
+            <p className="mc-section-sub">
+              Verify payments, deliver orders, and keep the server status fresh.
+            </p>
+          </div>
+          <button
+            className="mc-btn mc-btn-ghost"
+            onClick={logout}
+            data-testid="button-admin-logout"
+          >
+            Sign out
+          </button>
         </header>
 
         <div className="mc-stats">

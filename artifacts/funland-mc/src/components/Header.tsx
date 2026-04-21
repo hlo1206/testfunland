@@ -1,5 +1,4 @@
 import { Link, useLocation } from "wouter";
-import { useAuth } from "@workspace/replit-auth-web";
 import logo from "@assets/3d4c92e4-f308-42ed-a934-0d72e64b096c_1776768066816.jpg";
 import { DiscordIcon } from "./Icons";
 
@@ -13,7 +12,6 @@ const NAV = [
 
 export function Header() {
   const [loc] = useLocation();
-  const { user, isAuthenticated, login, logout } = useAuth();
 
   return (
     <header className="mc-header">
@@ -37,15 +35,6 @@ export function Header() {
               {n.label}
             </Link>
           ))}
-          {isAuthenticated && user?.isAdmin && (
-            <Link
-              href="/admin"
-              className={`mc-nav-link ${loc.startsWith("/admin") ? "is-active" : ""}`}
-              data-testid="nav-admin"
-            >
-              Admin
-            </Link>
-          )}
         </nav>
 
         <div className="mc-header-actions">
@@ -59,23 +48,6 @@ export function Header() {
             <DiscordIcon width={16} height={16} />
             <span>Discord</span>
           </a>
-          {isAuthenticated ? (
-            <button
-              className="mc-btn mc-btn-ghost"
-              onClick={logout}
-              data-testid="button-logout"
-            >
-              Sign out
-            </button>
-          ) : (
-            <button
-              className="mc-btn mc-btn-gold"
-              onClick={login}
-              data-testid="button-login"
-            >
-              Sign in
-            </button>
-          )}
         </div>
       </div>
     </header>
