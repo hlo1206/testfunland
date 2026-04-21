@@ -6,14 +6,8 @@ import {
   type Product,
 } from "@workspace/api-client-react";
 import { useUpload } from "@workspace/object-storage-web";
-import {
-  ChestIcon,
-  DiscordIcon,
-  UploadIcon,
-  CoinIcon,
-} from "@/components/Icons";
+import { ChestIcon, UploadIcon, CoinIcon } from "@/components/Icons";
 
-const DISCORD_URL = "https://discord.gg/gPSDTxqYWn";
 const UPI_ID = "9155174642@pthdfc";
 
 function getQueryProductId(): string | null {
@@ -27,7 +21,6 @@ export function CheckoutPage() {
   const [, navigate] = useLocation();
 
   const [productId, setProductId] = useState<string>("");
-  const [method, setMethod] = useState<"discord" | "website">("website");
   const [username, setUsername] = useState("");
   const [contact, setContact] = useState("");
   const [referral, setReferral] = useState("");
@@ -35,10 +28,7 @@ export function CheckoutPage() {
   const [notes, setNotes] = useState("");
   const [proofPath, setProofPath] = useState<string | null>(null);
   const [proofName, setProofName] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState<{
-    id: string;
-    method: "discord" | "website";
-  } | null>(null);
+  const [submitted, setSubmitted] = useState<{ id: string } | null>(null);
 
   useEffect(() => {
     const fromQuery = getQueryProductId();
@@ -82,7 +72,7 @@ export function CheckoutPage() {
       alert("Please enter your Minecraft username.");
       return;
     }
-    if (method === "website" && !proofPath) {
+    if (!proofPath) {
       alert("Please upload a screenshot of the UPI payment.");
       return;
     }
@@ -93,17 +83,13 @@ export function CheckoutPage() {
         minecraftUsername: username.trim(),
         contact: contact.trim() || null,
         referral: referral.trim() || null,
-        paymentMethod: method,
-        paymentProofPath: method === "website" ? proofPath : null,
-        transactionRef:
-          method === "website" ? transactionRef.trim() || null : null,
+        paymentMethod: "website",
+        paymentProofPath: proofPath,
+        transactionRef: transactionRef.trim() || null,
         notes: notes.trim() || null,
       },
     });
-    setSubmitted({ id: res.id, method: res.paymentMethod });
-    if (method === "discord") {
-      window.open(DISCORD_URL, "_blank");
-    }
+    setSubmitted({ id: res.id });
   };
 
   if (submitted) {
@@ -116,29 +102,13 @@ export function CheckoutPage() {
             <p>
               Order ID <code data-testid="text-order-id">{submitted.id}</code>
             </p>
-            {submitted.method === "discord" ? (
-              <p>
-                Open a ticket in our Discord — quote your order ID and complete
-                the payment with the team for instant delivery.
-              </p>
-            ) : (
-              <p>
-                We&apos;ll verify your payment and deliver within 30 minutes to
-                1 working day. Track updates on Discord.
-              </p>
-            )}
+            <p>
+              We&apos;ll verify your payment and deliver within 30 minutes to 1
+              working day.
+            </p>
             <div className="mc-hero-actions">
-              <a
-                className="mc-btn mc-btn-discord"
-                href={DISCORD_URL}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <DiscordIcon width={16} height={16} />
-                <span>Open Discord</span>
-              </a>
               <button
-                className="mc-btn mc-btn-outline"
+                className="mc-btn mc-btn-gold"
                 onClick={() => {
                   setSubmitted(null);
                   setProofPath(null);
@@ -163,8 +133,8 @@ export function CheckoutPage() {
         <header className="mc-section-head">
           <h1 className="mc-h1 mc-h1-sm">Checkout</h1>
           <p className="mc-section-sub">
-            Pick your item, choose how you want to pay, and we&apos;ll do the
-            rest.
+            Pay via UPI, upload your payment screenshot, and we&apos;ll deliver
+            within 30 minutes to 1 working day.
           </p>
         </header>
 
@@ -195,7 +165,7 @@ export function CheckoutPage() {
                 data-testid="input-username"
               />
 
-              <label className="mc-label">Contact (Discord tag or email)</label>
+              <label className="mc-label">Contact (email or phone)</label>
               <input
                 className="mc-input"
                 value={contact}
@@ -215,91 +185,48 @@ export function CheckoutPage() {
             </div>
 
             <div className="mc-card-form">
-              <div className="mc-method-title">Payment method</div>
-              <div className="mc-methods">
-                <button
-                  type="button"
-                  className={`mc-method ${method === "website" ? "is-active" : ""}`}
-                  onClick={() => setMethod("website")}
-                  data-testid="method-website"
-                >
-                  <UploadIcon width={28} height={28} />
-                  <div>
-                    <div className="mc-method-name">UPI on website</div>
-                    <div className="mc-method-sub">
-                      30 min — 1 working day verification
-                    </div>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  className={`mc-method ${method === "discord" ? "is-active" : ""}`}
-                  onClick={() => setMethod("discord")}
-                  data-testid="method-discord"
-                >
-                  <DiscordIcon width={28} height={28} />
-                  <div>
-                    <div className="mc-method-name">Discord ticket</div>
-                    <div className="mc-method-sub">
-                      Instant — handled by staff
-                    </div>
-                  </div>
-                </button>
-              </div>
+              <div className="mc-method-title">UPI Payment</div>
+              <div className="mc-upi">
+                <div className="mc-upi-row">
+                  <span className="mc-label">Pay to UPI ID</span>
+                  <code className="mc-upi-id" data-testid="text-upi-id">
+                    {UPI_ID}
+                  </code>
+                </div>
+                <p className="mc-help">
+                  Send <strong>₹{product?.priceInr ?? "—"}</strong> to the UPI
+                  ID above, then upload a clear screenshot of the confirmation.
+                </p>
 
-              {method === "website" ? (
-                <div className="mc-upi">
-                  <div className="mc-upi-row">
-                    <span className="mc-label">Pay to UPI ID</span>
-                    <code
-                      className="mc-upi-id"
-                      data-testid="text-upi-id"
-                    >
-                      {UPI_ID}
-                    </code>
-                  </div>
-                  <p className="mc-help">
-                    Send <strong>₹{product?.priceInr ?? "—"}</strong> to the UPI
-                    ID above, then upload a clear screenshot of the
-                    confirmation.
-                  </p>
+                <label className="mc-label">Transaction reference</label>
+                <input
+                  className="mc-input"
+                  value={transactionRef}
+                  onChange={(e) => setTransactionRef(e.target.value)}
+                  placeholder="UPI transaction ID (optional)"
+                  data-testid="input-txn-ref"
+                />
 
-                  <label className="mc-label">Transaction reference</label>
+                <label className="mc-label">Payment screenshot</label>
+                <label className="mc-upload">
                   <input
-                    className="mc-input"
-                    value={transactionRef}
-                    onChange={(e) => setTransactionRef(e.target.value)}
-                    placeholder="UPI transaction ID (optional)"
-                    data-testid="input-txn-ref"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFile}
+                    data-testid="input-proof"
                   />
-
-                  <label className="mc-label">Payment screenshot</label>
-                  <label className="mc-upload">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFile}
-                      data-testid="input-proof"
-                    />
-                    <UploadIcon width={20} height={20} />
-                    <span>
-                      {upload.isUploading
-                        ? "Uploading…"
-                        : proofPath
-                          ? `Uploaded: ${proofName}`
-                          : proofName
-                            ? proofName
-                            : "Choose screenshot"}
-                    </span>
-                  </label>
-                </div>
-              ) : (
-                <div className="mc-help">
-                  Click submit to create your order — we&apos;ll open Discord so
-                  you can open a ticket. Quote your order ID for instant
-                  delivery.
-                </div>
-              )}
+                  <UploadIcon width={20} height={20} />
+                  <span>
+                    {upload.isUploading
+                      ? "Uploading…"
+                      : proofPath
+                        ? `Uploaded: ${proofName}`
+                        : proofName
+                          ? proofName
+                          : "Choose screenshot"}
+                  </span>
+                </label>
+              </div>
 
               <label className="mc-label">Notes for the team</label>
               <textarea
@@ -341,7 +268,7 @@ export function CheckoutPage() {
                 createOrder.isPending ||
                 upload.isUploading ||
                 !product ||
-                (method === "website" && !proofPath)
+                !proofPath
               }
               data-testid="button-submit"
             >

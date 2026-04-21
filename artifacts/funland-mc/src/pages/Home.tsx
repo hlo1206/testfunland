@@ -145,16 +145,6 @@ export function HomePage() {
               <ChestIcon width={18} height={18} />
               <span>Open the Store</span>
             </Link>
-            <a
-              href={DISCORD_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="mc-btn mc-btn-discord mc-btn-lg"
-              data-testid="link-cta-discord"
-            >
-              <DiscordIcon width={18} height={18} />
-              <span>Join Discord</span>
-            </a>
           </div>
         </div>
       </section>
