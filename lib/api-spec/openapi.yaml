@@ -3,20 +3,23 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: FunLand MC API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: auth
+  - name: storage
+  - name: server-status
+  - name: products
+  - name: orders
+  - name: admin
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
-      summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +27,310 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/user:
+    get:
+      operationId: getCurrentAuthUser
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user (or null if not authenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetCurrentAuthUserResponse"
+
+  /mobile-auth/token-exchange:
+    post:
+      operationId: exchangeMobileAuthorizationCode
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExchangeMobileAuthorizationCodeBody"
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessionToken: { type: string }
+                  user: { $ref: "#/components/schemas/AuthUser" }
+                required: [sessionToken, user]
+
+  /storage/uploads/request-url:
+    post:
+      operationId: requestUploadUrl
+      tags: [storage]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestUploadUrlBody"
+      responses:
+        "200":
+          description: Presigned URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestUploadUrlResponse"
+
+  /server-status:
+    get:
+      operationId: getServerStatus
+      tags: [server-status]
+      responses:
+        "200":
+          description: Current public server status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+    put:
+      operationId: updateServerStatus
+      tags: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateServerStatusBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+
+  /products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      responses:
+        "200":
+          description: All purchasable items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+
+  /orders:
+    post:
+      operationId: createOrder
+      tags: [orders]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderBody"
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /admin/orders:
+    get:
+      operationId: listAdminOrders
+      tags: [admin]
+      responses:
+        "200":
+          description: All orders for admin review
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+
+  /admin/orders/{orderId}:
+    patch:
+      operationId: updateAdminOrder
+      tags: [admin]
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAdminOrderBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      responses:
+        "200":
+          description: Admin dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
 components:
   schemas:
     HealthStatus:
       type: object
       properties:
-        status:
-          type: string
-      required:
-        - status
+        status: { type: string }
+      required: [status]
 
+    AuthUser:
+      type: object
+      properties:
+        id: { type: string }
+        email: { type: string, nullable: true }
+        firstName: { type: string, nullable: true }
+        lastName: { type: string, nullable: true }
+        profileImageUrl: { type: string, nullable: true }
+        isAdmin: { type: boolean }
+      required: [id, isAdmin]
+
+    GetCurrentAuthUserResponse:
+      type: object
+      properties:
+        user:
+          oneOf:
+            - $ref: "#/components/schemas/AuthUser"
+            - type: "null"
+      required: [user]
+
+    ExchangeMobileAuthorizationCodeBody:
+      type: object
+      properties:
+        code: { type: string }
+        codeVerifier: { type: string }
+        state: { type: string }
+        nonce: { type: string }
+        redirectUri: { type: string }
+      required: [code, codeVerifier, state, nonce, redirectUri]
+
+    RequestUploadUrlBody:
+      type: object
+      properties:
+        name: { type: string }
+        size: { type: integer }
+        contentType: { type: string }
+      required: [name, size, contentType]
+
+    RequestUploadUrlResponse:
+      type: object
+      properties:
+        uploadURL: { type: string }
+        objectPath: { type: string }
+      required: [uploadURL, objectPath]
+
+    ServerStatus:
+      type: object
+      properties:
+        status: { type: string, enum: [online, offline, maintenance] }
+        playersOnline: { type: integer }
+        maxPlayers: { type: integer }
+        ip: { type: string }
+        port: { type: integer }
+        version: { type: string }
+        message: { type: string, nullable: true }
+        updatedAt: { type: string, format: date-time }
+      required: [status, playersOnline, maxPlayers, ip, port, version, updatedAt]
+
+    UpdateServerStatusBody:
+      type: object
+      properties:
+        status: { type: string, enum: [online, offline, maintenance] }
+        playersOnline: { type: integer }
+        maxPlayers: { type: integer }
+        ip: { type: string }
+        port: { type: integer }
+        version: { type: string }
+        message: { type: string, nullable: true }
+
+    Product:
+      type: object
+      properties:
+        id: { type: string }
+        category: { type: string, enum: [coins, rank, unban] }
+        name: { type: string }
+        priceInr: { type: integer }
+        tagline: { type: string, nullable: true }
+        coins: { type: integer, nullable: true }
+        rankTier: { type: string, nullable: true }
+        unbanDuration: { type: string, nullable: true }
+        accent: { type: string, nullable: true }
+        sortOrder: { type: integer }
+      required: [id, category, name, priceInr, sortOrder]
+
+    CreateOrderBody:
+      type: object
+      properties:
+        productId: { type: string }
+        minecraftUsername: { type: string }
+        contact: { type: string, nullable: true }
+        referral: { type: string, nullable: true }
+        paymentMethod: { type: string, enum: [discord, website] }
+        paymentProofPath: { type: string, nullable: true }
+        transactionRef: { type: string, nullable: true }
+        notes: { type: string, nullable: true }
+      required: [productId, minecraftUsername, paymentMethod]
+
+    Order:
+      type: object
+      properties:
+        id: { type: string }
+        productId: { type: string }
+        productName: { type: string }
+        productCategory: { type: string }
+        priceInr: { type: integer }
+        minecraftUsername: { type: string }
+        contact: { type: string, nullable: true }
+        referral: { type: string, nullable: true }
+        paymentMethod: { type: string, enum: [discord, website] }
+        paymentProofPath: { type: string, nullable: true }
+        transactionRef: { type: string, nullable: true }
+        notes: { type: string, nullable: true }
+        status: { type: string, enum: [pending, verified, delivered, rejected] }
+        adminNote: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, productId, productName, productCategory, priceInr, minecraftUsername, paymentMethod, status, createdAt, updatedAt]
+
+    UpdateAdminOrderBody:
+      type: object
+      properties:
+        status: { type: string, enum: [pending, verified, delivered, rejected] }
+        adminNote: { type: string, nullable: true }
+      required: [status]
+
+    AdminStats:
+      type: object
+      properties:
+        totalOrders: { type: integer }
+        pendingOrders: { type: integer }
+        deliveredOrders: { type: integer }
+        revenueInr: { type: integer }
+        recentOrders:
+          type: array
+          items: { $ref: "#/components/schemas/Order" }
+      required: [totalOrders, pendingOrders, deliveredOrders, revenueInr, recentOrders]
