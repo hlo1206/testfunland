@@ -7,9 +7,10 @@ import {
   HeartIcon,
   PickaxeIcon,
   BlockIcon,
+  SwordIcon,
 } from "@/components/Icons";
 
-type TabId = "coins" | "rank" | "unban" | "hosting" | "performance";
+type TabId = "coins" | "rank" | "unban" | "hosting" | "performance" | "ryzen";
 
 const TABS: { id: TabId; label: string; Icon: typeof CoinIcon }[] = [
   { id: "rank", label: "Ranks", Icon: ShieldIcon },
@@ -17,6 +18,7 @@ const TABS: { id: TabId; label: string; Icon: typeof CoinIcon }[] = [
   { id: "unban", label: "Unban", Icon: HeartIcon },
   { id: "hosting", label: "Hosting", Icon: PickaxeIcon },
   { id: "performance", label: "Performance", Icon: BlockIcon },
+  { id: "ryzen", label: "Ryzen", Icon: SwordIcon },
 ];
 
 export function StorePage() {

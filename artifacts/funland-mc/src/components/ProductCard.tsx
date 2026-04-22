@@ -10,6 +10,7 @@ import {
   UploadIcon,
   PickaxeIcon,
   BlockIcon,
+  SwordIcon,
 } from "./Icons";
 
 const DISCORD_URL = "https://discord.gg/gPSDTxqYWn";
@@ -20,6 +21,7 @@ function CategoryIcon({ category }: { category: string }) {
   if (category === "rank") return <ShieldIcon width={size} height={size} />;
   if (category === "hosting") return <PickaxeIcon width={size} height={size} />;
   if (category === "performance") return <BlockIcon width={size} height={size} />;
+  if (category === "ryzen") return <SwordIcon width={size} height={size} />;
   return <HeartIcon width={size} height={size} />;
 }
 

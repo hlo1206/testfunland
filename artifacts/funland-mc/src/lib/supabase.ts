@@ -26,7 +26,7 @@ export const ADMIN_EMAIL = "prideisnub@funland.local";
 
 export type Product = {
   id: string;
-  category: "coins" | "rank" | "unban" | "hosting" | "performance";
+  category: "coins" | "rank" | "unban" | "hosting" | "performance" | "ryzen";
   name: string;
   priceInr: number;
   tagline: string | null;
