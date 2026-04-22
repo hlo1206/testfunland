@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import type { Product } from "@/lib/supabase";
 import {
@@ -58,6 +58,27 @@ function HostingSpecs({ product }: { product: Product }) {
 export function ProductCard({ product }: { product: Product }) {
   const accent = product.accent ?? "#fbbf24";
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const scrollY = window.scrollY;
+    document.body.classList.add("mc-no-scroll");
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.position = "fixed";
+    document.body.style.width = "100%";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.classList.remove("mc-no-scroll");
+      document.body.style.top = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+      window.scrollTo(0, scrollY);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
   const [, navigate] = useLocation();
 
   const close = () => setOpen(false);
