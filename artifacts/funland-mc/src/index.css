@@ -963,4 +963,180 @@
     from { opacity: 0; transform: translateY(8px) scale(0.96); }
     to   { opacity: 1; transform: translateY(0) scale(1); }
   }
+
+  /* ================================================================
+     Global animations
+     ================================================================ */
+  @keyframes mcFadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes mcFadeDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes mcShine {
+    0%   { transform: translateX(-120%) skewX(-20deg); }
+    100% { transform: translateX(220%) skewX(-20deg); }
+  }
+  @keyframes mcPulseGlow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.45); }
+    50%      { box-shadow: 0 0 0 12px rgba(251,191,36,0); }
+  }
+  @keyframes mcWiggle {
+    0%,100% { transform: rotate(0); }
+    25%     { transform: rotate(-6deg); }
+    75%     { transform: rotate(6deg); }
+  }
+  @keyframes mcBob {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(-3px); }
+  }
+
+  /* Section entrance ---------------------------------------------- */
+  .mc-section { animation: mcFadeUp 0.55s ease-out both; }
+  .mc-section-head { animation: mcFadeUp 0.55s ease-out both; }
+  .mc-section-head > * + * { animation: mcFadeUp 0.6s 0.05s ease-out both; }
+
+  /* Card stagger -------------------------------------------------- */
+  .mc-grid > * { animation: mcFadeUp 0.45s ease-out both; }
+  .mc-grid > *:nth-child(1) { animation-delay: 0.04s; }
+  .mc-grid > *:nth-child(2) { animation-delay: 0.10s; }
+  .mc-grid > *:nth-child(3) { animation-delay: 0.16s; }
+  .mc-grid > *:nth-child(4) { animation-delay: 0.22s; }
+  .mc-grid > *:nth-child(5) { animation-delay: 0.28s; }
+  .mc-grid > *:nth-child(6) { animation-delay: 0.34s; }
+  .mc-grid > *:nth-child(7) { animation-delay: 0.40s; }
+  .mc-grid > *:nth-child(8) { animation-delay: 0.46s; }
+  .mc-grid > *:nth-child(n+9) { animation-delay: 0.52s; }
+
+  /* Cards: smoother lift + icon bob ------------------------------- */
+  .mc-card {
+    transition:
+      transform 0.25s cubic-bezier(.2,.9,.3,1.2),
+      border-color 0.25s,
+      box-shadow 0.25s;
+  }
+  .mc-card:hover {
+    transform: translateY(-6px) scale(1.015);
+    box-shadow: 0 18px 36px rgba(0,0,0,0.55);
+  }
+  .mc-card-icon {
+    transition: transform 0.3s cubic-bezier(.2,.9,.3,1.2);
+  }
+  .mc-card:hover .mc-card-icon {
+    animation: mcBob 1.4s ease-in-out infinite;
+  }
+  .mc-card-price {
+    transition: transform 0.25s ease, text-shadow 0.25s ease;
+  }
+  .mc-card:hover .mc-card-price {
+    transform: scale(1.06);
+  }
+
+  /* Buttons: shimmer + tactile press ------------------------------ */
+  .mc-btn {
+    position: relative;
+    overflow: hidden;
+    transition:
+      transform 0.08s ease,
+      box-shadow 0.2s ease,
+      background 0.2s ease,
+      filter 0.2s ease;
+  }
+  .mc-btn::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 40%; height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,0.28),
+      transparent
+    );
+    transform: translateX(-120%) skewX(-20deg);
+    pointer-events: none;
+  }
+  .mc-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+  }
+  .mc-btn:hover:not(:disabled)::after {
+    animation: mcShine 0.85s ease-out;
+  }
+  .mc-btn:active:not(:disabled) {
+    transform: translateY(1px) scale(0.98);
+  }
+  .mc-btn-gold:hover:not(:disabled) {
+    animation: mcPulseGlow 1.4s ease-out infinite;
+  }
+  .mc-btn-buy:hover:not(:disabled) {
+    box-shadow: 0 0 0 2px var(--accent, #fbbf24) inset,
+                0 6px 18px rgba(0,0,0,0.4);
+  }
+
+  /* Tabs: slide indicator-ish ------------------------------------- */
+  .mc-tab {
+    transition:
+      background 0.2s ease,
+      color 0.2s ease,
+      transform 0.15s ease,
+      box-shadow 0.2s ease;
+  }
+  .mc-tab:hover:not(.is-active) {
+    transform: translateY(-1px);
+    background: rgba(255,255,255,0.04);
+  }
+  .mc-tab.is-active {
+    animation: mcFadeDown 0.25s ease-out;
+  }
+
+  /* Header nav links --------------------------------------------- */
+  .mc-nav a, .mc-nav button {
+    position: relative;
+    transition: color 0.2s ease;
+  }
+  .mc-nav a::after, .mc-nav button::after {
+    content: "";
+    position: absolute;
+    left: 12%; right: 12%; bottom: 4px;
+    height: 2px;
+    background: var(--mc-gold-2, #fbbf24);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.25s cubic-bezier(.2,.9,.3,1.2);
+  }
+  .mc-nav a:hover::after, .mc-nav button:hover::after {
+    transform: scaleX(1);
+  }
+
+  /* Icon hover wiggle inside cards/cta --------------------------- */
+  .mc-cta-icons svg {
+    transition: transform 0.3s ease;
+  }
+  .mc-cta-icons svg:hover {
+    animation: mcWiggle 0.5s ease;
+  }
+
+  /* Inputs: focus glow ------------------------------------------- */
+  .mc-card-form input,
+  .mc-card-form textarea,
+  .mc-card-form select {
+    transition: border-color 0.2s, box-shadow 0.25s, transform 0.15s;
+  }
+  .mc-card-form input:focus,
+  .mc-card-form textarea:focus,
+  .mc-card-form select:focus {
+    box-shadow: 0 0 0 3px rgba(251,191,36,0.25);
+  }
+
+  /* Reduced motion respect --------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
 }
