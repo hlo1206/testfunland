@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocation } from "wouter";
 import type { Product } from "@/lib/supabase";
 import {
@@ -116,7 +117,7 @@ export function ProductCard({ product }: { product: Product }) {
         </button>
       </article>
 
-      {open && (
+      {open && createPortal(
         <div
           className="mc-modal-backdrop"
           onClick={close}
@@ -186,7 +187,8 @@ export function ProductCard({ product }: { product: Product }) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
