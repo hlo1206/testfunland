@@ -8,6 +8,8 @@ import {
   HeartIcon,
   DiscordIcon,
   UploadIcon,
+  PickaxeIcon,
+  BlockIcon,
 } from "./Icons";
 
 const DISCORD_URL = "https://discord.gg/gPSDTxqYWn";
@@ -16,7 +18,41 @@ function CategoryIcon({ category }: { category: string }) {
   const size = 36;
   if (category === "coins") return <CoinIcon width={size} height={size} />;
   if (category === "rank") return <ShieldIcon width={size} height={size} />;
+  if (category === "hosting") return <PickaxeIcon width={size} height={size} />;
+  if (category === "performance") return <BlockIcon width={size} height={size} />;
   return <HeartIcon width={size} height={size} />;
+}
+
+function HostingSpecs({ product }: { product: Product }) {
+  if (
+    product.cpuPercent == null &&
+    product.ramGb == null &&
+    product.storageGb == null
+  ) {
+    return null;
+  }
+  return (
+    <ul className="mc-card-specs">
+      {product.cpuPercent != null && (
+        <li>
+          <span>CPU</span>
+          <strong>{product.cpuPercent}%</strong>
+        </li>
+      )}
+      {product.ramGb != null && (
+        <li>
+          <span>RAM</span>
+          <strong>{product.ramGb} GB</strong>
+        </li>
+      )}
+      {product.storageGb != null && (
+        <li>
+          <span>Storage</span>
+          <strong>{product.storageGb} GB SSD</strong>
+        </li>
+      )}
+    </ul>
+  );
 }
 
 export function ProductCard({ product }: { product: Product }) {
@@ -40,9 +76,13 @@ export function ProductCard({ product }: { product: Product }) {
           {product.name}
         </div>
         {product.tagline && <div className="mc-card-tag">{product.tagline}</div>}
+        <HostingSpecs product={product} />
         <div className="mc-card-price" data-testid={`text-price-${product.id}`}>
           <span className="mc-price-currency">₹</span>
           {product.priceInr}
+          {product.billingPeriod && (
+            <span className="mc-price-period">/{product.billingPeriod}</span>
+          )}
         </div>
         <button
           type="button"
@@ -81,7 +121,10 @@ export function ProductCard({ product }: { product: Product }) {
               </div>
               <div>
                 <div className="mc-modal-title">{product.name}</div>
-                <div className="mc-modal-price">₹{product.priceInr}</div>
+                <div className="mc-modal-price">
+                  ₹{product.priceInr}
+                  {product.billingPeriod && `/${product.billingPeriod}`}
+                </div>
               </div>
             </div>
             <div className="mc-modal-sub">How would you like to pay?</div>

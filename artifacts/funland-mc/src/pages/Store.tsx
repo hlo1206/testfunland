@@ -1,17 +1,27 @@
 import { useMemo, useState } from "react";
 import { useListProducts } from "@/lib/supabase";
 import { ProductCard } from "@/components/ProductCard";
-import { CoinIcon, ShieldIcon, HeartIcon } from "@/components/Icons";
+import {
+  CoinIcon,
+  ShieldIcon,
+  HeartIcon,
+  PickaxeIcon,
+  BlockIcon,
+} from "@/components/Icons";
 
-const TABS = [
-  { id: "coins" as const, label: "Coin Packs", Icon: CoinIcon },
-  { id: "rank" as const, label: "Ranks", Icon: ShieldIcon },
-  { id: "unban" as const, label: "Unban", Icon: HeartIcon },
+type TabId = "coins" | "rank" | "unban" | "hosting" | "performance";
+
+const TABS: { id: TabId; label: string; Icon: typeof CoinIcon }[] = [
+  { id: "rank", label: "Ranks", Icon: ShieldIcon },
+  { id: "coins", label: "Coin Packs", Icon: CoinIcon },
+  { id: "unban", label: "Unban", Icon: HeartIcon },
+  { id: "hosting", label: "Hosting", Icon: PickaxeIcon },
+  { id: "performance", label: "Performance", Icon: BlockIcon },
 ];
 
 export function StorePage() {
   const { data, isLoading } = useListProducts();
-  const [tab, setTab] = useState<"coins" | "rank" | "unban">("rank");
+  const [tab, setTab] = useState<TabId>("rank");
 
   const filtered = useMemo(
     () =>

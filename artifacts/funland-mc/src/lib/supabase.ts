@@ -26,13 +26,17 @@ export const ADMIN_EMAIL = "prideisnub@funland.local";
 
 export type Product = {
   id: string;
-  category: "coins" | "rank" | "unban";
+  category: "coins" | "rank" | "unban" | "hosting" | "performance";
   name: string;
   priceInr: number;
   tagline: string | null;
   coins: number | null;
   rankTier: string | null;
   unbanDuration: string | null;
+  cpuPercent: number | null;
+  ramGb: number | null;
+  storageGb: number | null;
+  billingPeriod: string | null;
   accent: string | null;
   sortOrder: number;
 };
@@ -75,6 +79,10 @@ type ProductRow = {
   coins: number | null;
   rank_tier: string | null;
   unban_duration: string | null;
+  cpu_percent: number | null;
+  ram_gb: number | null;
+  storage_gb: number | null;
+  billing_period: string | null;
   accent: string | null;
   sort_order: number;
 };
@@ -117,6 +125,10 @@ const mapProduct = (r: ProductRow): Product => ({
   coins: r.coins,
   rankTier: r.rank_tier,
   unbanDuration: r.unban_duration,
+  cpuPercent: r.cpu_percent,
+  ramGb: r.ram_gb,
+  storageGb: r.storage_gb,
+  billingPeriod: r.billing_period,
   accent: r.accent,
   sortOrder: r.sort_order,
 });
