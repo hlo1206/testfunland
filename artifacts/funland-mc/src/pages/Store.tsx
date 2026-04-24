@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useListProducts } from "@/lib/supabase";
+import { useListProducts, useListSpecialOffers, type SpecialOffer } from "@/lib/supabase";
 import { ProductCard } from "@/components/ProductCard";
 import {
   CoinIcon,
@@ -9,6 +9,31 @@ import {
   BlockIcon,
   SwordIcon,
 } from "@/components/Icons";
+
+function SpecialOfferBanner({ offer }: { offer: SpecialOffer }) {
+  const isExpired =
+    offer.expiresAt && new Date(offer.expiresAt) < new Date();
+  if (isExpired) return null;
+  return (
+    <div className="mc-offer-banner">
+      {offer.badgeText && (
+        <span className="mc-offer-badge">{offer.badgeText}</span>
+      )}
+      <div className="mc-offer-content">
+        <div className="mc-offer-title">{offer.title}</div>
+        <div className="mc-offer-desc">{offer.description}</div>
+      </div>
+      {offer.discountPercent && (
+        <div className="mc-offer-discount">{offer.discountPercent}% OFF</div>
+      )}
+      {offer.expiresAt && (
+        <div className="mc-offer-expires">
+          Expires {new Date(offer.expiresAt).toLocaleDateString()}
+        </div>
+      )}
+    </div>
+  );
+}
 
 type TabId = "coins" | "rank" | "unban" | "hosting" | "performance" | "ryzen";
 
@@ -23,6 +48,7 @@ const TABS: { id: TabId; label: string; Icon: typeof CoinIcon }[] = [
 
 export function StorePage() {
   const { data, isLoading } = useListProducts();
+  const { data: offers } = useListSpecialOffers({ activeOnly: true });
   const [tab, setTab] = useState<TabId>("rank");
 
   const filtered = useMemo(
@@ -43,6 +69,14 @@ export function StorePage() {
             Discord ticket — your choice.
           </p>
         </header>
+
+        {offers && offers.length > 0 && (
+          <div className="mc-offers-list">
+            {offers.map((offer) => (
+              <SpecialOfferBanner key={offer.id} offer={offer} />
+            ))}
+          </div>
+        )}
 
         <div className="mc-tabs" role="tablist">
           {TABS.map((t) => (

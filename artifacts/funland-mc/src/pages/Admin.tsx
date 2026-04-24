@@ -7,7 +7,13 @@ import {
   useGetServerStatus,
   useUpdateServerStatus,
   useAdminStats,
+  useListSpecialOffers,
+  useCreateSpecialOffer,
+  useUpdateSpecialOffer,
+  useDeleteSpecialOffer,
   type Order,
+  type SpecialOffer,
+  type CreateSpecialOfferInput,
 } from "@/lib/supabase";
 import { ShieldIcon, ChestIcon, HeartIcon, CoinIcon } from "@/components/Icons";
 
@@ -220,6 +226,255 @@ function StatusEditor() {
         Save status
       </button>
     </form>
+  );
+}
+
+const EMPTY_OFFER: CreateSpecialOfferInput = {
+  title: "",
+  description: "",
+  badgeText: null,
+  discountPercent: null,
+  active: true,
+  expiresAt: null,
+};
+
+function OfferForm({
+  initial,
+  onSave,
+  onCancel,
+  isPending,
+}: {
+  initial: CreateSpecialOfferInput;
+  onSave: (v: CreateSpecialOfferInput) => void;
+  onCancel: () => void;
+  isPending: boolean;
+}) {
+  const [form, setForm] = useState(initial);
+
+  const set = (patch: Partial<CreateSpecialOfferInput>) =>
+    setForm((f) => ({ ...f, ...patch }));
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({
+      ...form,
+      title: form.title.trim(),
+      description: form.description.trim(),
+      badgeText: form.badgeText?.trim() || null,
+      discountPercent: form.discountPercent ?? null,
+      expiresAt: form.expiresAt || null,
+    });
+  };
+
+  return (
+    <form className="mc-card-form" onSubmit={submit} style={{ marginTop: 12 }}>
+      <label className="mc-label">Title *</label>
+      <input
+        className="mc-input"
+        required
+        value={form.title}
+        onChange={(e) => set({ title: e.target.value })}
+        placeholder="e.g. Weekend Sale!"
+      />
+      <label className="mc-label">Description *</label>
+      <textarea
+        className="mc-input mc-textarea"
+        required
+        value={form.description}
+        onChange={(e) => set({ description: e.target.value })}
+        placeholder="e.g. Get 20% off on all ranks this weekend only!"
+      />
+      <div className="mc-row-2">
+        <div>
+          <label className="mc-label">Badge text</label>
+          <input
+            className="mc-input"
+            value={form.badgeText ?? ""}
+            onChange={(e) => set({ badgeText: e.target.value || null })}
+            placeholder="e.g. HOT, SALE, LIMITED"
+          />
+        </div>
+        <div>
+          <label className="mc-label">Discount %</label>
+          <input
+            type="number"
+            min={1}
+            max={100}
+            className="mc-input"
+            value={form.discountPercent ?? ""}
+            onChange={(e) =>
+              set({ discountPercent: e.target.value ? Number(e.target.value) : null })
+            }
+            placeholder="e.g. 20"
+          />
+        </div>
+      </div>
+      <label className="mc-label">Expires at</label>
+      <input
+        type="datetime-local"
+        className="mc-input"
+        value={form.expiresAt ? form.expiresAt.slice(0, 16) : ""}
+        onChange={(e) =>
+          set({ expiresAt: e.target.value ? new Date(e.target.value).toISOString() : null })
+        }
+      />
+      <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+        <input
+          type="checkbox"
+          checked={form.active}
+          onChange={(e) => set({ active: e.target.checked })}
+        />
+        <span className="mc-label" style={{ margin: 0 }}>Active (visible in shop)</span>
+      </label>
+      <div className="mc-order-actions" style={{ marginTop: 8 }}>
+        <button type="submit" className="mc-btn mc-btn-gold" disabled={isPending}>
+          {isPending ? "Saving…" : "Save offer"}
+        </button>
+        <button type="button" className="mc-btn mc-btn-ghost" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function SpecialOffersEditor() {
+  const { data: offers } = useListSpecialOffers();
+  const create = useCreateSpecialOffer();
+  const update = useUpdateSpecialOffer();
+  const del = useDeleteSpecialOffer();
+  const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState<SpecialOffer | null>(null);
+
+  const handleCreate = (v: CreateSpecialOfferInput) => {
+    create.mutate(v, { onSuccess: () => setAdding(false) });
+  };
+
+  const handleUpdate = (v: CreateSpecialOfferInput) => {
+    if (!editing) return;
+    update.mutate({ id: editing.id, ...v }, { onSuccess: () => setEditing(null) });
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm("Delete this offer?")) del.mutate(id);
+  };
+
+  return (
+    <div className="mc-card-form">
+      <div
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+      >
+        <div className="mc-summary-title">Special offers</div>
+        {!adding && (
+          <button
+            className="mc-btn mc-btn-gold"
+            style={{ fontSize: 13, padding: "4px 12px" }}
+            onClick={() => { setAdding(true); setEditing(null); }}
+          >
+            + Add offer
+          </button>
+        )}
+      </div>
+
+      {adding && (
+        <OfferForm
+          initial={EMPTY_OFFER}
+          onSave={handleCreate}
+          onCancel={() => setAdding(false)}
+          isPending={create.isPending}
+        />
+      )}
+
+      {!offers || offers.length === 0 ? (
+        <div className="mc-empty" style={{ fontSize: 13, padding: "12px 0" }}>
+          No offers yet.
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
+          {offers.map((offer) => (
+            <div key={offer.id} className="mc-order">
+              {editing?.id === offer.id ? (
+                <OfferForm
+                  initial={{
+                    title: offer.title,
+                    description: offer.description,
+                    badgeText: offer.badgeText,
+                    discountPercent: offer.discountPercent,
+                    active: offer.active,
+                    expiresAt: offer.expiresAt,
+                  }}
+                  onSave={handleUpdate}
+                  onCancel={() => setEditing(null)}
+                  isPending={update.isPending}
+                />
+              ) : (
+                <div className="mc-order-head" style={{ flexWrap: "wrap", gap: 8 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="mc-order-name">
+                      {offer.badgeText && (
+                        <span
+                          style={{
+                            background: "#f5a623",
+                            color: "#000",
+                            borderRadius: 4,
+                            padding: "1px 6px",
+                            fontSize: 11,
+                            marginRight: 6,
+                            fontWeight: 700,
+                          }}
+                        >
+                          {offer.badgeText}
+                        </span>
+                      )}
+                      {offer.title}
+                      {offer.discountPercent && (
+                        <span style={{ color: "#4ade80", marginLeft: 6, fontSize: 13 }}>
+                          {offer.discountPercent}% OFF
+                        </span>
+                      )}
+                    </div>
+                    <div className="mc-order-sub">{offer.description}</div>
+                    {offer.expiresAt && (
+                      <div className="mc-order-sub">
+                        Expires: {new Date(offer.expiresAt).toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        padding: "2px 8px",
+                        borderRadius: 4,
+                        background: offer.active ? "#166534" : "#374151",
+                        color: offer.active ? "#4ade80" : "#9ca3af",
+                      }}
+                    >
+                      {offer.active ? "ACTIVE" : "INACTIVE"}
+                    </span>
+                    <button
+                      className="mc-btn mc-btn-outline"
+                      style={{ fontSize: 12, padding: "3px 10px" }}
+                      onClick={() => { setEditing(offer); setAdding(false); }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="mc-btn mc-btn-ghost"
+                      style={{ fontSize: 12, padding: "3px 10px" }}
+                      onClick={() => handleDelete(offer.id)}
+                      disabled={del.isPending}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -440,6 +695,9 @@ export function AdminPage() {
           </div>
           <aside>
             <StatusEditor />
+            <div style={{ marginTop: 24 }}>
+              <SpecialOffersEditor />
+            </div>
           </aside>
         </div>
       </section>

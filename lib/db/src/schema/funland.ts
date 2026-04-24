@@ -55,6 +55,18 @@ export const adminUsersTable = pgTable("admin_users", {
   email: text("email").primaryKey(),
 });
 
+export const specialOffersTable = pgTable("special_offers", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  badgeText: text("badge_text"),
+  discountPercent: integer("discount_percent"),
+  active: text("active").notNull().default("true"),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export type Product = typeof productsTable.$inferSelect;
 export type Order = typeof ordersTable.$inferSelect;
 export type ServerStatusRow = typeof serverStatusTable.$inferSelect;
+export type SpecialOffer = typeof specialOffersTable.$inferSelect;

@@ -330,6 +330,138 @@ export function useAdminStats(orders: Order[] | undefined) {
   };
 }
 
+export type SpecialOffer = {
+  id: string;
+  title: string;
+  description: string;
+  badgeText: string | null;
+  discountPercent: number | null;
+  active: boolean;
+  expiresAt: string | null;
+  createdAt: string;
+};
+
+type SpecialOfferRow = {
+  id: string;
+  title: string;
+  description: string;
+  badge_text: string | null;
+  discount_percent: number | null;
+  active: string;
+  expires_at: string | null;
+  created_at: string;
+};
+
+const mapOffer = (r: SpecialOfferRow): SpecialOffer => ({
+  id: r.id,
+  title: r.title,
+  description: r.description,
+  badgeText: r.badge_text,
+  discountPercent: r.discount_percent,
+  active: r.active === "true",
+  expiresAt: r.expires_at,
+  createdAt: r.created_at,
+});
+
+export function useListSpecialOffers(opts?: { activeOnly?: boolean }) {
+  return useQuery({
+    queryKey: ["special-offers", opts?.activeOnly ?? false],
+    queryFn: async (): Promise<SpecialOffer[]> => {
+      let q = supabase
+        .from("special_offers")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (opts?.activeOnly) {
+        q = q.eq("active", "true");
+      }
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data as SpecialOfferRow[]).map(mapOffer);
+    },
+  });
+}
+
+export type CreateSpecialOfferInput = {
+  title: string;
+  description: string;
+  badgeText: string | null;
+  discountPercent: number | null;
+  active: boolean;
+  expiresAt: string | null;
+};
+
+export function useCreateSpecialOffer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateSpecialOfferInput): Promise<SpecialOffer> => {
+      const id =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const { data, error } = await supabase
+        .from("special_offers")
+        .insert({
+          id,
+          title: input.title,
+          description: input.description,
+          badge_text: input.badgeText,
+          discount_percent: input.discountPercent,
+          active: input.active ? "true" : "false",
+          expires_at: input.expiresAt,
+        })
+        .select("*")
+        .single();
+      if (error) throw error;
+      return mapOffer(data as SpecialOfferRow);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["special-offers"] });
+    },
+  });
+}
+
+export function useUpdateSpecialOffer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id: string } & CreateSpecialOfferInput): Promise<SpecialOffer> => {
+      const { data, error } = await supabase
+        .from("special_offers")
+        .update({
+          title: input.title,
+          description: input.description,
+          badge_text: input.badgeText,
+          discount_percent: input.discountPercent,
+          active: input.active ? "true" : "false",
+          expires_at: input.expiresAt,
+        })
+        .eq("id", input.id)
+        .select("*")
+        .single();
+      if (error) throw error;
+      return mapOffer(data as SpecialOfferRow);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["special-offers"] });
+    },
+  });
+}
+
+export function useDeleteSpecialOffer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string): Promise<void> => {
+      const { error } = await supabase
+        .from("special_offers")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["special-offers"] });
+    },
+  });
+}
+
 export type UploadResult = { publicUrl: string };
 
 export async function uploadPaymentProof(file: File): Promise<UploadResult> {
