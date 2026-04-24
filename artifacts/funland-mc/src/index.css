@@ -963,4 +963,34 @@
     from { opacity: 0; transform: translateY(8px) scale(0.96); }
     to   { opacity: 1; transform: translateY(0) scale(1); }
   }
+
+  /* ── Special Offers ─────────────────────────────────────── */
+  .mc-offers-list {
+    display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;
+  }
+  .mc-offer-banner {
+    display: flex; align-items: center; gap: 14px;
+    background: linear-gradient(135deg, rgba(var(--mc-wood-2-rgb, 60,40,20), 0.95), var(--mc-wood-2, #3c2814));
+    border: 2px solid var(--offer-accent, #fbbf24);
+    border-radius: 8px; padding: 14px 18px;
+    box-shadow: 0 0 18px -4px var(--offer-accent, #fbbf24);
+    animation: mcFadeIn 0.3s ease;
+    flex-wrap: wrap;
+  }
+  .mc-offer-badge {
+    background: var(--offer-accent, #fbbf24);
+    color: #1a0a00; font-size: 11px; font-weight: 900;
+    letter-spacing: 0.1em; padding: 3px 10px;
+    border-radius: 4px; white-space: nowrap; flex-shrink: 0;
+  }
+  .mc-offer-body { flex: 1; min-width: 0; }
+  .mc-offer-title {
+    font-size: 15px; font-weight: 800; color: var(--offer-accent, #fbbf24);
+    margin-bottom: 2px;
+  }
+  .mc-offer-desc { font-size: 13px; color: #c8a878; }
+  .mc-offer-discount {
+    font-size: 22px; font-weight: 900; color: var(--offer-accent, #fbbf24);
+    letter-spacing: -0.02em; white-space: nowrap; flex-shrink: 0;
+  }
 }

@@ -330,6 +330,155 @@ export function useAdminStats(orders: Order[] | undefined) {
   };
 }
 
+export type SpecialOffer = {
+  id: string;
+  title: string;
+  description: string;
+  discountText: string;
+  badgeLabel: string;
+  active: boolean;
+  expiresAt: string | null;
+  accent: string;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type SpecialOfferRow = {
+  id: string;
+  title: string;
+  description: string;
+  discount_text: string;
+  badge_label: string;
+  active: boolean;
+  expires_at: string | null;
+  accent: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+const mapOffer = (r: SpecialOfferRow): SpecialOffer => ({
+  id: r.id,
+  title: r.title,
+  description: r.description,
+  discountText: r.discount_text,
+  badgeLabel: r.badge_label,
+  active: r.active,
+  expiresAt: r.expires_at,
+  accent: r.accent,
+  sortOrder: r.sort_order,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
+});
+
+export function useListSpecialOffers(opts?: { activeOnly?: boolean }) {
+  return useQuery({
+    queryKey: ["special-offers", opts?.activeOnly ?? false],
+    queryFn: async (): Promise<SpecialOffer[]> => {
+      let q = supabase
+        .from("special_offers")
+        .select("*")
+        .order("sort_order", { ascending: true });
+      if (opts?.activeOnly) q = q.eq("active", true);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data as SpecialOfferRow[]).map(mapOffer);
+    },
+  });
+}
+
+export function useCreateSpecialOffer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      title: string;
+      description: string;
+      discountText: string;
+      badgeLabel: string;
+      active: boolean;
+      expiresAt: string | null;
+      accent: string;
+      sortOrder: number;
+    }): Promise<SpecialOffer> => {
+      const { data, error } = await supabase
+        .from("special_offers")
+        .insert({
+          title: input.title,
+          description: input.description,
+          discount_text: input.discountText,
+          badge_label: input.badgeLabel,
+          active: input.active,
+          expires_at: input.expiresAt || null,
+          accent: input.accent,
+          sort_order: input.sortOrder,
+        })
+        .select("*")
+        .single();
+      if (error) throw error;
+      return mapOffer(data as SpecialOfferRow);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["special-offers"] });
+    },
+  });
+}
+
+export function useUpdateSpecialOffer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      id: string;
+      title: string;
+      description: string;
+      discountText: string;
+      badgeLabel: string;
+      active: boolean;
+      expiresAt: string | null;
+      accent: string;
+      sortOrder: number;
+    }): Promise<SpecialOffer> => {
+      const { data, error } = await supabase
+        .from("special_offers")
+        .update({
+          title: input.title,
+          description: input.description,
+          discount_text: input.discountText,
+          badge_label: input.badgeLabel,
+          active: input.active,
+          expires_at: input.expiresAt || null,
+          accent: input.accent,
+          sort_order: input.sortOrder,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", input.id)
+        .select("*")
+        .single();
+      if (error) throw error;
+      return mapOffer(data as SpecialOfferRow);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["special-offers"] });
+    },
+  });
+}
+
+export function useDeleteSpecialOffer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string): Promise<void> => {
+      const { error } = await supabase
+        .from("special_offers")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["special-offers"] });
+    },
+  });
+}
+
 export type UploadResult = { publicUrl: string };
 
 export async function uploadPaymentProof(file: File): Promise<UploadResult> {
