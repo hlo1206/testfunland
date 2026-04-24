@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import {
   useListProducts,
@@ -20,7 +20,7 @@ export function CheckoutPage() {
   const { data: products } = useListProducts();
   const [, navigate] = useLocation();
 
-  const [productId, setProductId] = useState<string>("");
+  const [productId, setProductId] = useState<string>(() => getQueryProductId() ?? "");
   const [username, setUsername] = useState("");
   const [contact, setContact] = useState("");
   const [referral, setReferral] = useState("");
@@ -30,17 +30,6 @@ export function CheckoutPage() {
   const [proofName, setProofName] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [submitted, setSubmitted] = useState<{ id: string } | null>(null);
-
-  useEffect(() => {
-    const fromQuery = getQueryProductId();
-    if (fromQuery) setProductId(fromQuery);
-  }, []);
-
-  useEffect(() => {
-    if (!productId && products && products.length > 0) {
-      setProductId(products[0]!.id);
-    }
-  }, [productId, products]);
 
   const product: Product | undefined = useMemo(
     () => products?.find((p) => p.id === productId),
