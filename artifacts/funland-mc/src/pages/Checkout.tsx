@@ -20,7 +20,7 @@ export function CheckoutPage() {
   const { data: products } = useListProducts();
   const [, navigate] = useLocation();
 
-  const [productId, setProductId] = useState<string>("");
+  const [productId] = useState<string>(() => getQueryProductId() ?? "");
   const [username, setUsername] = useState("");
   const [contact, setContact] = useState("");
   const [referral, setReferral] = useState("");
@@ -32,15 +32,10 @@ export function CheckoutPage() {
   const [submitted, setSubmitted] = useState<{ id: string } | null>(null);
 
   useEffect(() => {
-    const fromQuery = getQueryProductId();
-    if (fromQuery) setProductId(fromQuery);
-  }, []);
-
-  useEffect(() => {
-    if (!productId && products && products.length > 0) {
-      setProductId(products[0]!.id);
+    if (products && products.length > 0 && !productId) {
+      navigate("/store");
     }
-  }, [productId, products]);
+  }, [products, productId, navigate]);
 
   const product: Product | undefined = useMemo(
     () => products?.find((p) => p.id === productId),
@@ -143,19 +138,26 @@ export function CheckoutPage() {
         <form className="mc-checkout" onSubmit={submit}>
           <div className="mc-checkout-main">
             <div className="mc-card-form">
-              <label className="mc-label">Product</label>
-              <select
-                className="mc-input"
-                value={productId}
-                onChange={(e) => setProductId(e.target.value)}
-                data-testid="select-product"
-              >
-                {(products ?? []).map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} — ₹{p.priceInr}
-                  </option>
-                ))}
-              </select>
+              {product ? (
+                <div className="mc-selected-product">
+                  <div className="mc-label">You are buying</div>
+                  <div className="mc-selected-product-name">{product.name}</div>
+                  <div className="mc-selected-product-price">
+                    ₹{product.priceInr}
+                    {product.billingPeriod && `/${product.billingPeriod}`}
+                  </div>
+                  <button
+                    type="button"
+                    className="mc-btn mc-btn-ghost"
+                    style={{ fontSize: 12, padding: "4px 12px", marginTop: 4 }}
+                    onClick={() => navigate("/store")}
+                  >
+                    ← Change product
+                  </button>
+                </div>
+              ) : (
+                <div className="mc-help">Loading product…</div>
+              )}
 
               <label className="mc-label">Minecraft username</label>
               <input
@@ -261,7 +263,7 @@ export function CheckoutPage() {
                 </div>
               </>
             ) : (
-              <div className="mc-help">Pick a product to continue.</div>
+              <div className="mc-help">Loading…</div>
             )}
             <button
               type="submit"
