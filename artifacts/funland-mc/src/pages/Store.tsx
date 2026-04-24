@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useListProducts, useListSpecialOffers, type SpecialOffer } from "@/lib/supabase";
+import { useListProducts } from "@/lib/supabase";
 import { ProductCard } from "@/components/ProductCard";
 import {
   CoinIcon,
@@ -19,29 +19,8 @@ const TABS: { id: TabId; label: string; Icon: typeof CoinIcon }[] = [
   { id: "performance", label: "Performance", Icon: BlockIcon },
 ];
 
-function OfferBanner({ offer }: { offer: SpecialOffer }) {
-  const isExpired =
-    offer.expiresAt != null && new Date(offer.expiresAt) < new Date();
-  if (isExpired) return null;
-
-  return (
-    <div
-      className="mc-offer-banner"
-      style={{ ["--offer-accent" as string]: offer.accent }}
-    >
-      <span className="mc-offer-badge">{offer.badgeLabel}</span>
-      <div className="mc-offer-body">
-        <div className="mc-offer-title">{offer.title}</div>
-        <div className="mc-offer-desc">{offer.description}</div>
-      </div>
-      <div className="mc-offer-discount">{offer.discountText}</div>
-    </div>
-  );
-}
-
 export function StorePage() {
   const { data, isLoading } = useListProducts();
-  const { data: offers } = useListSpecialOffers({ activeOnly: true });
   const [tab, setTab] = useState<TabId>("rank");
 
   const filtered = useMemo(
@@ -51,12 +30,6 @@ export function StorePage() {
         .sort((a, b) => a.sortOrder - b.sortOrder),
     [data, tab],
   );
-
-  const activeOffers = (offers ?? []).filter((o) => {
-    if (!o.active) return false;
-    if (o.expiresAt && new Date(o.expiresAt) < new Date()) return false;
-    return true;
-  });
 
   return (
     <main className="mc-page">
@@ -68,14 +41,6 @@ export function StorePage() {
             Discord ticket — your choice.
           </p>
         </header>
-
-        {activeOffers.length > 0 && (
-          <div className="mc-offers-list">
-            {activeOffers.map((o) => (
-              <OfferBanner key={o.id} offer={o} />
-            ))}
-          </div>
-        )}
 
         <div className="mc-tabs" role="tablist">
           {TABS.map((t) => (
