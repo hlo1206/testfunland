@@ -1,6 +1,6 @@
 import { DiscordIcon, BlockIcon } from "./Icons";
 
-const DISCORD_URL = "https://discord.gg/gPSDTxqYWn";
+const DISCORD_URL = "https://discord.gg/GNZZ968bUX";
 
 export function Footer() {
   return (

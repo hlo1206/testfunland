@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import logo from "@assets/3d4c92e4-f308-42ed-a934-0d72e64b096c_1776768066816.jpg";
 import { DiscordIcon } from "./Icons";
 
-const DISCORD_URL = "https://discord.gg/gPSDTxqYWn";
+const DISCORD_URL = "https://discord.gg/GNZZ968bUX";
 
 const NAV = [
   { to: "/", label: "Home" },

@@ -14,7 +14,7 @@ import {
 } from "@/components/Icons";
 import logo from "@assets/3d4c92e4-f308-42ed-a934-0d72e64b096c_1776768066816.jpg";
 
-const DISCORD_URL = "https://discord.gg/gPSDTxqYWn";
+const DISCORD_URL = "https://discord.gg/GNZZ968bUX";
 
 const FEATURES = [
   {

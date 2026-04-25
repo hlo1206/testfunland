@@ -52,6 +52,6 @@ Sign in at `/admin` with username `prideisnub` and password `nubispride`. Under 
 
 ### Important details
 - UPI ID for website payments: `9155174642@pthdfc`
-- Discord: `https://discord.gg/gPSDTxqYWn`
+- Discord: `https://discord.gg/GNZZ968bUX`
 - Server: `play.funlandmc.fun:19132`, versions 1.16+ to 1.21.11
 - Order statuses: `pending → verified → delivered` (or `rejected`).

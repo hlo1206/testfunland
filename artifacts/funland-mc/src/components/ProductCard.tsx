@@ -13,7 +13,7 @@ import {
   SwordIcon,
 } from "./Icons";
 
-const DISCORD_URL = "https://discord.gg/gPSDTxqYWn";
+const DISCORD_URL = "https://discord.gg/GNZZ968bUX";
 
 function CategoryIcon({ category }: { category: string }) {
   const size = 36;
