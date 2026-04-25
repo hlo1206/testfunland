@@ -334,8 +334,6 @@ export type SpecialOffer = {
   id: string;
   title: string;
   description: string;
-  badgeText: string | null;
-  discountPercent: number | null;
   active: boolean;
   expiresAt: string | null;
   createdAt: string;
@@ -345,8 +343,6 @@ type SpecialOfferRow = {
   id: string;
   title: string;
   description: string;
-  badge_text: string | null;
-  discount_percent: number | null;
   active: string;
   expires_at: string | null;
   created_at: string;
@@ -356,8 +352,6 @@ const mapOffer = (r: SpecialOfferRow): SpecialOffer => ({
   id: r.id,
   title: r.title,
   description: r.description,
-  badgeText: r.badge_text,
-  discountPercent: r.discount_percent,
   active: r.active === "true",
   expiresAt: r.expires_at,
   createdAt: r.created_at,
@@ -384,8 +378,6 @@ export function useListSpecialOffers(opts?: { activeOnly?: boolean }) {
 export type CreateSpecialOfferInput = {
   title: string;
   description: string;
-  badgeText: string | null;
-  discountPercent: number | null;
   active: boolean;
   expiresAt: string | null;
 };
@@ -404,8 +396,6 @@ export function useCreateSpecialOffer() {
           id,
           title: input.title,
           description: input.description,
-          badge_text: input.badgeText,
-          discount_percent: input.discountPercent,
           active: input.active ? "true" : "false",
           expires_at: input.expiresAt,
         })
@@ -429,8 +419,6 @@ export function useUpdateSpecialOffer() {
         .update({
           title: input.title,
           description: input.description,
-          badge_text: input.badgeText,
-          discount_percent: input.discountPercent,
           active: input.active ? "true" : "false",
           expires_at: input.expiresAt,
         })

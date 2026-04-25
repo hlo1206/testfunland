@@ -232,8 +232,6 @@ function StatusEditor() {
 const EMPTY_OFFER: CreateSpecialOfferInput = {
   title: "",
   description: "",
-  badgeText: null,
-  discountPercent: null,
   active: true,
   expiresAt: null,
 };
@@ -260,8 +258,6 @@ function OfferForm({
       ...form,
       title: form.title.trim(),
       description: form.description.trim(),
-      badgeText: form.badgeText?.trim() || null,
-      discountPercent: form.discountPercent ?? null,
       expiresAt: form.expiresAt || null,
     });
   };
@@ -284,31 +280,6 @@ function OfferForm({
         onChange={(e) => set({ description: e.target.value })}
         placeholder="e.g. Get 20% off on all ranks this weekend only!"
       />
-      <div className="mc-row-2">
-        <div>
-          <label className="mc-label">Badge text</label>
-          <input
-            className="mc-input"
-            value={form.badgeText ?? ""}
-            onChange={(e) => set({ badgeText: e.target.value || null })}
-            placeholder="e.g. HOT, SALE, LIMITED"
-          />
-        </div>
-        <div>
-          <label className="mc-label">Discount %</label>
-          <input
-            type="number"
-            min={1}
-            max={100}
-            className="mc-input"
-            value={form.discountPercent ?? ""}
-            onChange={(e) =>
-              set({ discountPercent: e.target.value ? Number(e.target.value) : null })
-            }
-            placeholder="e.g. 20"
-          />
-        </div>
-      </div>
       <label className="mc-label">Expires at</label>
       <input
         type="datetime-local"
@@ -347,16 +318,26 @@ function SpecialOffersEditor() {
   const [editing, setEditing] = useState<SpecialOffer | null>(null);
 
   const handleCreate = (v: CreateSpecialOfferInput) => {
-    create.mutate(v, { onSuccess: () => setAdding(false) });
+    create.mutate(v, {
+      onSuccess: () => setAdding(false),
+      onError: (err) => alert(`Failed to save offer: ${(err as Error).message}`),
+    });
   };
 
   const handleUpdate = (v: CreateSpecialOfferInput) => {
     if (!editing) return;
-    update.mutate({ id: editing.id, ...v }, { onSuccess: () => setEditing(null) });
+    update.mutate({ id: editing.id, ...v }, {
+      onSuccess: () => setEditing(null),
+      onError: (err) => alert(`Failed to update offer: ${(err as Error).message}`),
+    });
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Delete this offer?")) del.mutate(id);
+    if (confirm("Delete this offer?")) {
+      del.mutate(id, {
+        onError: (err) => alert(`Failed to delete offer: ${(err as Error).message}`),
+      });
+    }
   };
 
   return (
@@ -398,8 +379,6 @@ function SpecialOffersEditor() {
                   initial={{
                     title: offer.title,
                     description: offer.description,
-                    badgeText: offer.badgeText,
-                    discountPercent: offer.discountPercent,
                     active: offer.active,
                     expiresAt: offer.expiresAt,
                   }}
@@ -410,29 +389,7 @@ function SpecialOffersEditor() {
               ) : (
                 <div className="mc-order-head" style={{ flexWrap: "wrap", gap: 8 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="mc-order-name">
-                      {offer.badgeText && (
-                        <span
-                          style={{
-                            background: "#f5a623",
-                            color: "#000",
-                            borderRadius: 4,
-                            padding: "1px 6px",
-                            fontSize: 11,
-                            marginRight: 6,
-                            fontWeight: 700,
-                          }}
-                        >
-                          {offer.badgeText}
-                        </span>
-                      )}
-                      {offer.title}
-                      {offer.discountPercent && (
-                        <span style={{ color: "#4ade80", marginLeft: 6, fontSize: 13 }}>
-                          {offer.discountPercent}% OFF
-                        </span>
-                      )}
-                    </div>
+                    <div className="mc-order-name">{offer.title}</div>
                     <div className="mc-order-sub">{offer.description}</div>
                     {offer.expiresAt && (
                       <div className="mc-order-sub">

@@ -16,16 +16,11 @@ function SpecialOfferBanner({ offer }: { offer: SpecialOffer }) {
   if (isExpired) return null;
   return (
     <div className="mc-offer-banner">
-      {offer.badgeText && (
-        <span className="mc-offer-badge">{offer.badgeText}</span>
-      )}
+      <span className="mc-offer-badge">OFFER</span>
       <div className="mc-offer-content">
         <div className="mc-offer-title">{offer.title}</div>
         <div className="mc-offer-desc">{offer.description}</div>
       </div>
-      {offer.discountPercent && (
-        <div className="mc-offer-discount">{offer.discountPercent}% OFF</div>
-      )}
       {offer.expiresAt && (
         <div className="mc-offer-expires">
           Expires {new Date(offer.expiresAt).toLocaleDateString()}
