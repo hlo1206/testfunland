@@ -417,12 +417,21 @@ function SpecialOffersEditor() {
                       Edit
                     </button>
                     <button
-                      className="mc-btn mc-btn-ghost"
-                      style={{ fontSize: 12, padding: "3px 10px" }}
+                      style={{
+                        fontSize: 12,
+                        padding: "3px 10px",
+                        background: "rgba(239,68,68,0.15)",
+                        border: "1px solid rgba(239,68,68,0.5)",
+                        color: "#f87171",
+                        borderRadius: 6,
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                        fontWeight: 600,
+                      }}
                       onClick={() => handleDelete(offer.id)}
                       disabled={del.isPending}
                     >
-                      Delete
+                      {del.isPending ? "Deleting…" : "🗑 Delete"}
                     </button>
                   </div>
                 </div>
